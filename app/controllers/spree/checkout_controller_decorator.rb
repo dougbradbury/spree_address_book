@@ -11,12 +11,16 @@ Spree::CheckoutController.class_eval do
     
     if params[:order][:ship_address_id].to_i > 0
       params[:order].delete(:ship_address_attributes)
+
+      Spree::Address.find(params[:order][:ship_address_id]).user_id != spree_current_user.id && raise("Frontend address forging")
     else
       params[:order].delete(:ship_address_id)
     end
     
     if params[:order][:bill_address_id].to_i > 0
       params[:order].delete(:bill_address_attributes)
+
+      Spree::Address.find(params[:order][:bill_address_id]).user_id != spree_current_user.id && raise("Frontend address forging")
     else
       params[:order].delete(:bill_address_id)
     end
@@ -37,8 +41,8 @@ Spree::CheckoutController.class_eval do
       @order.bill_address.destroy
       @order.update_attribute(:bill_address_id, @order.ship_address.id)
     else
-      @order.bill_address.update_attribute(:user_id, current_user.try(:id))
+      @order.bill_address.update_attribute(:user_id, spree_current_user.try(:id))
     end
-    @order.ship_address.update_attribute(:user_id, current_user.try(:id))
+    @order.ship_address.update_attribute(:user_id, spree_current_user.try(:id))
   end
 end
